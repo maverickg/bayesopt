@@ -28,6 +28,7 @@
 #include "log.hpp"
 #include "cholesky.hpp"
 #include "ublas_extra.hpp"
+#include "optimizekernel.hpp"	
 
 #include "gaussian_process.hpp"
 #include "gaussian_process_ml.hpp"
@@ -40,19 +41,21 @@ namespace bayesopt
 {
   
   NonParametricProcess::NonParametricProcess(size_t dim, bopt_params parameters):
-    InnerOptimization(), mRegularizer(parameters.noise), 
-    mSigma(parameters.sigma_s), dim_(dim)
+    mSigma(parameters.sigma_s), dim_(dim), mRegularizer(parameters.noise),
+    mMinIndex(0), mMaxIndex(0)
   { 
-    mMinIndex = 0;     mMaxIndex = 0;   
+    kOptimizer = new OptimizeKernel(this);
+
+    //TODO: Generalize
     if (parameters.l_type == L_ML)
       {
-	setAlgorithm(BOBYQA);    // local search to avoid underfitting
+	kOptimizer->setAlgorithm(BOBYQA);    // local search to avoid underfitting
       }
     else
       {
-	setAlgorithm(COMBINED);
+	kOptimizer->setAlgorithm(COMBINED);
       }
-    setLimits(1e-10,100.);
+    kOptimizer->setLimits(1e-10,100.);
     setLearnType(parameters.l_type);
     int errorK = setKernel(parameters.kernel,dim);
     int errorM = setMean(parameters.mean,dim);
@@ -63,7 +66,10 @@ namespace bayesopt
       }
   }
 
-  NonParametricProcess::~NonParametricProcess(){}
+  NonParametricProcess::~NonParametricProcess()
+  {
+    delete kOptimizer;
+  }
 
 
   NonParametricProcess* NonParametricProcess::create(size_t dim, 
@@ -101,7 +107,7 @@ namespace bayesopt
 	
 	FILE_LOG(logDEBUG) << "Computing kernel parameters. Seed: " 
 			   << optimalTheta;
-	innerOptimize(optimalTheta);
+	kOptimizer->run(optimalTheta);
 	error = mKernel->setHyperParameters(optimalTheta);
 
 	if (error)
@@ -328,7 +334,7 @@ namespace bayesopt
     return prior;
   }
 
-  double NonParametricProcess::innerEvaluate(const vectord& query)
+  double NonParametricProcess::evaluateKernelParams(const vectord& query)
   { 
     int error = mKernel->setHyperParameters(query);
     if (error) 
@@ -373,41 +379,6 @@ namespace bayesopt
     matrixd K(nSamples,nSamples);
     computeCorrMatrix(K);
     return utils::cholesky_decompose(K,mL);
-  }
-
-  int NonParametricProcess::addNewPointToInverse(const vectord& correlation,
-						 double selfcorrelation)
-  {
-    size_t nSamples = correlation.size();
-  
-    vectord wInvR = prod(correlation,mInvR);
-    double wInvRw = inner_prod(wInvR,correlation);
-    double Ni = 1/(selfcorrelation - wInvRw);
-    vectord Li = -Ni * wInvR;
-    mInvR += outer_prod(Li,Li) / Ni;
-  
-    //TODO: There must be a better way to do this.
-    mInvR.resize(nSamples+1,nSamples+1,true);
-  
-    Li.resize(nSamples+1);
-    Li(nSamples) = Ni;
-  
-    row(mInvR,nSamples) = Li;
-    column(mInvR,nSamples) = Li;
-
-    return 0;
-
-  }
-
-
-  int NonParametricProcess::computeInverseCorrelation()
-  {
-    const size_t nSamples = mGPXX.size();
-    if ( (nSamples != mInvR.size1()) || (nSamples != mInvR.size2()) )
-      mInvR.resize(nSamples,nSamples);
-    
-    const matrixd corrMatrix = computeCorrMatrix();
-    return utils::inverse_cholesky(corrMatrix,mInvR);
   }
 
 
