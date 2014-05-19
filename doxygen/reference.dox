@@ -1,0 +1,10 @@
+/*! \page reference Reference Manual
+\tableofcontents
+
+- \subpage install
+- \subpage usemanual
+- \subpage demos
+- \subpage bopttheory
+- \subpage contriblib
+
+*/
