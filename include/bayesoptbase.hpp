@@ -31,6 +31,7 @@
 #include "parameters.h"
 #include "specialtypes.hpp"
 //#include "posteriormodel.hpp"
+#include "bopt_state.hpp"
 
 
 /**
@@ -126,7 +127,13 @@ namespace bayesopt {
 
     /** Initialize the optimization process.  */
     void initializeOptimization();
-
+    
+    /** Saves the current state of the optimization process into a state class. */
+    void saveOptimization(BOptState &state);
+    
+    /** Restores the optimization process of a previous execution */
+    void restoreOptimization(BOptState state);
+    
     /** Once the optimization has been perfomed, return the optimal point. */
     virtual vectord getFinalResult() = 0;
 
@@ -134,6 +141,7 @@ namespace bayesopt {
     const Dataset* getData();
     bopt_params* getParameters();
     double getValueAtMinimum();
+    size_t getCurrentIter();
     double evaluateCriteria(const vectord& query);
 
   protected:

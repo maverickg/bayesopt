@@ -1,4 +1,5 @@
-/**  \file parser.hpp \brief Functions to parse strings */
+
+/**  \file param_loader.hpp \brief Allows to load parameters from file */
 /*
 -------------------------------------------------------------------------
    This file is part of BayesOpt, an efficient C++ library for 
@@ -21,36 +22,35 @@
 ------------------------------------------------------------------------
 */
 
-#ifndef  _PARSER_HPP_
-#define  _PARSER_HPP_
 
-#include <vector>
+#ifndef  _PARAM_LOADER_HPP_
+#define  _PARAM_LOADER_HPP_
 
-namespace bayesopt 
-{  
-  namespace utils 
-  {
-    /**
-     * Parse expresions of the form Parent(Child1, Child2). The "childs"
-     * can also be expressions of the same type.
-     */
-    void parseExpresion(std::string input, std::string& parent,
-			std::string& child1, std::string& child2);
+#include "parameters.h"
+#include "specialtypes.hpp"
+#include "fileparser.hpp"
 
-    /**
-     * Parse expresions of the form Parent(Child1, ... ,ChildN). The "childs"
-     * can also be expressions of the same type.
-     */
-    void parseExpresion(std::string input, std::string& parent,
-		       std::vector<std::string>& childs);
 
-    /**
-     * Splits the input string with a delimiter to extract elements
-     */
-    void split(std::string &input, char delim, std::vector<std::string> &elems);
-    
-  } //namespace utils
+/**
+ * Namespace of the library interface
+ */
+namespace bayesopt {
 
+    //TODO (Javier): Complete class description
+  /**
+   * \brief .
+   * 
+   */
+    class ParamLoader{
+    public: 
+        void loadFromFile(std::string filename, bopt_params &par);
+        
+        /* This one is useful to create param files from existing hard-coded params */
+        void saveToFile(std::string filename, bopt_params &par);
+    private:
+        void loadOrSave(utils::FileParser &fp, bopt_params &par);
+    };
 } //namespace bayesopt
+
 
 #endif

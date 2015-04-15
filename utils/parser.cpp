@@ -21,6 +21,7 @@
 */
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 #include "parser.hpp"
 
 namespace bayesopt 
@@ -42,7 +43,7 @@ namespace bayesopt
       int i = 0, j = 0;
       while (is >> c) 
 	{
-	  if (i < 0) throw std::runtime_error("Error parsin expression:" + input);
+	  if (i < 0) throw std::runtime_error("Error parsing expression:" + input);
 	  
 	  if (c == ' ') /* pass */;
 	  else if (c == '(') i++;
@@ -55,7 +56,7 @@ namespace bayesopt
 	      else os2 << c;
 	    }
 	}
-      if (i != 0) throw std::runtime_error("Error parsin expression:" + input);
+      if (i != 0) throw std::runtime_error("Error parsing expression:" + input);
 
       parent = os.str();
       child1 = os1.str();
@@ -78,7 +79,7 @@ namespace bayesopt
       childs.clear();
       while (is >> c) 
 	{
-	  if (i < 0) throw std::runtime_error("Error parsin expression:" + input);
+	  if (i < 0) throw std::runtime_error("Error parsing expression:" + input);
 
 	  if (c == ' ') /* pass */;
 	  else if (c == '(') 
@@ -101,11 +102,21 @@ namespace bayesopt
 	      else os1 << c;
 	    }
 	}
-      if (i != 0) throw std::runtime_error("Error parsin expression:" + input);
+      if (i != 0) throw std::runtime_error("Error parsing expression:" + input);
 
       parent = os.str();
     } 
     
+    /**
+     * Splits the input string with a delimiter to extract elements
+     */
+    void split(std::string &input, char delim, std::vector<std::string> &elems){
+        std::stringstream ss(input);
+        std::string item;
+        while (std::getline(ss, item, delim)){
+            elems.push_back(item);
+        }
+    }
   } //namespace utils
 
 } //namespace bayesopt
